@@ -216,3 +216,22 @@ ipcMain.handle("camera:rtsp:stop", async (_event, { cameraId }) => {
 ipcMain.handle("camera:rtsp:status", async (_event, { cameraId }) => {
   return getRtspStreamStatus(cameraId)
 })
+import { ipcMain } from "electron"
+import {
+  getRtspCameraStatus,
+  startRtspCameraStream,
+  stopRtspCameraStream,
+} from "./rtspBridge"
+
+ipcMain.handle("camera:rtsp:start", async (_event, { cameraId, sourceUrl }) => {
+  return startRtspCameraStream(cameraId, sourceUrl)
+})
+
+ipcMain.handle("camera:rtsp:stop", async (_event, { cameraId }) => {
+  stopRtspCameraStream(cameraId)
+  return { ok: true }
+})
+
+ipcMain.handle("camera:rtsp:status", async (_event, { cameraId }) => {
+  return getRtspCameraStatus(cameraId)
+})
