@@ -246,3 +246,11 @@ contextBridge.exposeInMainWorld("facenoxRTSP", {
   stop: (cameraId: string) => ipcRenderer.invoke("camera:rtsp:stop", { cameraId }),
   status: (cameraId: string) => ipcRenderer.invoke("camera:rtsp:status", { cameraId }),
 })
+import { contextBridge, ipcRenderer } from "electron"
+
+contextBridge.exposeInMainWorld("facenoxRTSP", {
+  start: (cameraId: string, sourceUrl: string) =>
+    ipcRenderer.invoke("camera:rtsp:start", { cameraId, sourceUrl }),
+  stop: (cameraId: string) => ipcRenderer.invoke("camera:rtsp:stop", { cameraId }),
+  status: (cameraId: string) => ipcRenderer.invoke("camera:rtsp:status", { cameraId }),
+})
