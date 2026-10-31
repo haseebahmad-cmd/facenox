@@ -376,3 +376,13 @@ declare global {
     __facenoxOffFrame?: () => void
   }
 }
+declare global {
+  interface Window {
+    facenoxRTSP?: {
+      start: (cameraId: string, rtspUrl: string) => Promise<{ streamUrl: string; status: "ok" | "error"; error?: string }>
+      stop: (cameraId: string) => Promise<{ ok: boolean }>
+      status: (cameraId: string) => Promise<{ status: "online" | "offline"; streamUrl?: string }>
+    }
+  }
+}
+export {}
