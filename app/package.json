@@ -74,3 +74,8 @@
     "vitest": "^4.1.10"
   }
 }
+{
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0"
+  }
+}
