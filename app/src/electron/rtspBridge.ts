@@ -183,3 +183,90 @@ export function getRtspStreamStatus(cameraId: string): { status: "online" | "off
     streamUrl: state.url,
   }
 }
+import { spawn } from "node:child_process"
+
+type CameraStreamState = {
+  ffmpeg: ReturnType<typeof spawn> | null
+  url: string
+  startedAt: number
+  lastError: string | null
+}
+
+const activeStreams = new Map<string, CameraStreamState>()
+
+const sanitizeUrl = (value: string): string => {
+  if (!value || typeof value !== "string") return ""
+  try {
+    const url = new URL(value)
+    if (["rtsp:", "http:", "https:"].includes(url.protocol)) return url.toString()
+  } catch {
+    // ignore
+  }
+  return ""
+}
+
+export function startRtspCameraStream(cameraId: string, sourceUrl: string) {
+  const safeUrl = sanitizeUrl(sourceUrl)
+  if (!safeUrl) {
+    return { status: "error", error: "invalid RTSP URL" as const }
+  }
+
+  if (activeStreams.has(cameraId)) {
+    const current = activeStreams.get(cameraId)
+    return { status: "ok", streamUrl: current?.url ?? "" }
+  }
+
+  const ffmpegPath = process.env.FFMPEG_PATH || "ffmpeg"
+  const localPort = 18000 + (Math.abs(cameraId.split("").reduce((sum, ch) => sum + ch.charCodeAt(0), 0)) % 5000)
+  const localUrl = `http://127.0.0.1:${localPort}/stream/${cameraId}`
+
+  const ffmpeg = spawn(ffmpegPath, [
+    "-rtsp_transport",
+    "tcp",
+    "-i",
+    safeUrl,
+    "-f",
+    "mjpeg",
+    "-q:v",
+    "2",
+    "-",
+  ])
+
+  const state: CameraStreamState = {
+    ffmpeg,
+    url: localUrl,
+    startedAt: Date.now(),
+    lastError: null,
+  }
+
+  activeStreams.set(cameraId, state)
+
+  ffmpeg.on("error", (error) => {
+    state.lastError = error.message
+    stopRtspCameraStream(cameraId)
+  })
+
+  ffmpeg.on("close", (code) => {
+    if (code !== 0) {
+      state.lastError = `ffmpeg exited with code ${code}`
+    }
+    stopRtspCameraStream(cameraId)
+  })
+
+  return { status: "ok", streamUrl: localUrl }
+}
+
+export function stopRtspCameraStream(cameraId: string) {
+  const state = activeStreams.get(cameraId)
+  if (!state) return
+
+  state.ffmpeg?.kill("SIGTERM")
+  activeStreams.delete(cameraId)
+}
+
+export function getRtspCameraStatus(cameraId: string) {
+  const state = activeStreams.get(cameraId)
+  if (!state) return { status: "offline" as const }
+
+  return { status: "online" as const, streamUrl: state.url }
+}
