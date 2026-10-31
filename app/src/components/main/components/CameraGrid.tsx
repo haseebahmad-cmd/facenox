@@ -219,3 +219,13 @@ if (typeof window !== "undefined") {
     }
   })
 }
+import { RTSPService } from "@/services/RTSPService"
+
+const handleRtspStart = async (deviceId: string, rtspUrl: string) => {
+  const response = await RTSPService.start(deviceId, rtspUrl)
+  if (response.status === "ok") {
+    console.log("RTSP stream started:", response.streamUrl)
+  } else {
+    console.error("RTSP stream failed:", response.error)
+  }
+}
