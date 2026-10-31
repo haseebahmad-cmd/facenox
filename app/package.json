@@ -79,3 +79,12 @@
     "ffmpeg-static": "^5.2.0"
   }
 }
+{
+  "name": "facenox",
+  ...
+}
+{
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0"
+  }
+}
