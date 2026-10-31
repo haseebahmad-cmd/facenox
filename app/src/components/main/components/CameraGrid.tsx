@@ -229,3 +229,17 @@ const handleRtspStart = async (deviceId: string, rtspUrl: string) => {
     console.error("RTSP stream failed:", response.error)
   }
 }
+import { RTSPService } from "@/services/RTSPService"
+
+const handleRtspStart = async (deviceId: string, rtspUrl: string) => {
+  const response = await RTSPService.start(deviceId, rtspUrl)
+  if (response.status === "ok") {
+    console.log("RTSP stream started:", response.streamUrl)
+  } else {
+    console.error("RTSP stream failed:", response.error)
+  }
+}
+if (profile?.sourceType === "rtsp" && profile?.sourceUrl) {
+  const imageSrc = `http://127.0.0.1:PORT/stream/${deviceId}`
+  // Render as <img src={imageSrc} />
+}
