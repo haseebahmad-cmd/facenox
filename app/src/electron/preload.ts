@@ -240,3 +240,9 @@ contextBridge.exposeInMainWorld("facenoxElectron", {
   openLogFile: () => ipcRenderer.invoke("system:open-log-file"),
   onAppReady: () => ipcRenderer.send("app:ready"),
 })
+contextBridge.exposeInMainWorld("facenoxRTSP", {
+  start: (cameraId: string, rtspUrl: string) =>
+    ipcRenderer.invoke("camera:rtsp:start", { cameraId, rtspUrl }),
+  stop: (cameraId: string) => ipcRenderer.invoke("camera:rtsp:stop", { cameraId }),
+  status: (cameraId: string) => ipcRenderer.invoke("camera:rtsp:status", { cameraId }),
+})
