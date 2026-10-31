@@ -160,3 +160,147 @@ export function ControlBar({
     </div>
   )
 }
+import { useCameraStore } from "@/components/main/stores"
+import { ArrowUp, ArrowDown, Pencil, MonitorUp } from "lucide-react"
+
+interface CameraGridProps {
+  cameraDevices: MediaDeviceInfo[]
+  selectedCamera: string
+  setSelectedCamera: (deviceId: string) => void
+  startCamera: () => void
+  stopCamera: (forceCleanup?: boolean) => void
+  isStreaming: boolean
+}
+
+export function CameraGrid({
+  cameraDevices,
+  selectedCamera,
+  setSelectedCamera,
+  startCamera,
+  stopCamera,
+  isStreaming,
+}: CameraGridProps) {
+  const cameraProfiles = useCameraStore((state) => state.cameraProfiles)
+  const renameCamera = useCameraStore((state) => state.renameCamera)
+  const moveCamera = useCameraStore((state) => state.moveCamera)
+
+  const orderedDevices = [...cameraDevices].sort((a, b) => {
+    const profileA = cameraProfiles.find((p) => p.deviceId === a.deviceId)
+    const profileB = cameraProfiles.find((p) => p.deviceId === b.deviceId)
+    const orderA = profileA?.order ?? 9999
+    const orderB = profileB?.order ?? 9999
+    return orderA - orderB
+  })
+
+  const handleRename = (deviceId: string) => {
+    const current = cameraProfiles.find((profile) => profile.deviceId === deviceId)
+    const nextLabel = window.prompt("Rename camera", current?.displayName || "Camera")
+    if (!nextLabel) return
+    renameCamera(deviceId, nextLabel)
+  }
+
+  return (
+    <div className="w-full">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-sm font-medium text-white/80">Camera feeds</div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {orderedDevices.map((device) => {
+          const profile = cameraProfiles.find((p) => p.deviceId === device.deviceId)
+          const displayName = profile?.displayName || device.label || "Camera"
+          const isActive = selectedCamera === device.deviceId
+
+          return (
+            <button
+              key={device.deviceId}
+              type="button"
+              onClick={() => setSelectedCamera(device.deviceId)}
+              className={[
+                "group relative overflow-hidden rounded-xl border p-3 text-left transition-all",
+                isActive
+                  ? "border-cyan-500/60 bg-cyan-500/10"
+                  : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]",
+              ].join(" ")}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-white">{displayName}</div>
+                  <div className="mt-1 text-[11px] text-white/50">
+                    {device.label || "Web camera"}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label={`Rename ${displayName}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRename(device.deviceId)
+                    }}
+                    className="rounded-md border border-white/10 bg-white/5 p-1 text-white/70 hover:bg-white/10"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-label={`Move ${displayName} up`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      moveCamera(device.deviceId, "up")
+                    }}
+                    className="rounded-md border border-white/10 bg-white/5 p-1 text-white/70 hover:bg-white/10"
+                  >
+                    <ArrowUp className="size-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-label={`Move ${displayName} down`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      moveCamera(device.deviceId, "down")
+                    }}
+                    className="rounded-md border border-white/10 bg-white/5 p-1 text-white/70 hover:bg-white/10"
+                  >
+                    <ArrowDown className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[11px] text-white/60">
+                  <MonitorUp className="size-3.5" />
+                  {isActive ? "Selected" : "Available"}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (isStreaming && selectedCamera === device.deviceId) {
+                      stopCamera(false)
+                    } else {
+                      setSelectedCamera(device.deviceId)
+                      startCamera()
+                    }
+                  }}
+                  className={[
+                    "rounded-md px-2 py-1 text-[11px] font-medium",
+                    isStreaming && selectedCamera === device.deviceId
+                      ? "bg-rose-500/20 text-rose-200"
+                      : "bg-cyan-500/20 text-cyan-200",
+                  ].join(" ")}
+                >
+                  {isStreaming && selectedCamera === device.deviceId ? "Stop" : "Start"}
+                </button>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
