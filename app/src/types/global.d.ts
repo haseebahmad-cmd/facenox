@@ -386,3 +386,13 @@ declare global {
   }
 }
 export {}
+declare global {
+  interface Window {
+    facenoxRTSP?: {
+      start: (cameraId: string, sourceUrl: string) => Promise<{ status: "ok" | "error"; streamUrl?: string; error?: string }>
+      stop: (cameraId: string) => Promise<{ ok: boolean }>
+      status: (cameraId: string) => Promise<{ status: "online" | "offline"; streamUrl?: string }>
+    }
+  }
+}
+export {}
