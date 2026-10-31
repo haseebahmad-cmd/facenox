@@ -201,3 +201,18 @@ app.on("activate", () => {
     state.mainWindow.show()
   }
 })
+import { ipcMain } from "electron"
+import { startRtspStream, stopRtspStream, getRtspStreamStatus } from "./rtspBridge"
+
+ipcMain.handle("camera:rtsp:start", async (_event, { cameraId, rtspUrl }) => {
+  return startRtspStream(cameraId, rtspUrl)
+})
+
+ipcMain.handle("camera:rtsp:stop", async (_event, { cameraId }) => {
+  stopRtspStream(cameraId)
+  return { ok: true }
+})
+
+ipcMain.handle("camera:rtsp:status", async (_event, { cameraId }) => {
+  return getRtspStreamStatus(cameraId)
+})
